@@ -16,16 +16,18 @@ has no ground truth, but on good_deals.txt (positive) and bad_deals.txt (negativ
 deviation 0.01. 
 The model itself is not complicated, though I have tried a few. The most important part is feature extraction. 
 In the code bellow, two type features: 1) generic NLP features; 2) Emperica features
-1) generic NLP features: bag of key words from good deals only (removing stop words and normalize words) feature, with 1 representing if a word 
+1) generic NLP features: key words from good deals only (removing stop words and normalize words) feature, with 1 representing if a word 
 reprenting the word occuring in the deal, and 0 otherwise;
 2) Emperical features: based on my observation, the good deals are typically long and contains word like "save" "\d+%" "off".
 So I include 3 emperical features: number of key words and if the deal contains "save", "off".  
 
 Without emperical features, the classification performance is very bad (around 60%) since each deal is very short and no big difference between good and bad deals.
-I tried liear svm, decision tree, logistic regression with Lasso penalty, naive Bayesian, without emperical features, the perofmrance is very bad.
+I tried liear svm, decision tree, logistic regression with Lasso penalty, naive Bayesian, among which lienar SVM performs the best.
 - How did you test your classifier?
 Answer: Randomly sample 1/6 of training data as test data, use 5/6 as training, build model and select parameters. Repat the process for 20 times.
-Finally compute average accuracy and train the model on all the training data, and apply to test_deals.txt.
+Finally compute average accuracy and train the model on all the training data, and apply to test_deals.txt. However 
+test data is unlabeled hence I only output the prediction result. 
+By manually checking, line 42,50,53 mentioned coupon codes, and our prediction results are all 1! 
 """
 import nltk
 import re
@@ -105,6 +107,7 @@ sizes = trainData.shape
 X = trainData [:,0:sizes[1]-1]
 y = trainData [:,sizes[1]-1]
 avg_scores = list()
+# model selection
 Clist = [pow(2,2),pow(2,0),pow(2,-2),pow(2,-4),pow(2,-6),pow(2,-8)]
 for c in Clist:
     scores = list()
@@ -126,11 +129,17 @@ for c in Clist:
 #now load test data
     avg_scores.append(np.mean(scores)) 
 print avg_scores
+# select the best C
 c= Clist[avg_scores.index(np.array(avg_scores).max())]
 clf = svm.SVC(C=c, kernel='linear')
+# train a model on all the labeled data given C
 clf.fit(X, y)
+# load test data
 test_docs = docs_extractor('../data/test_deals.txt')
-testFeaturesets = [ml_features(d) for d in test_docs] #unknown labels 0
+# extract data matrix for test data
+testFeaturesets = [ml_features(d) for d in test_docs]
+# make prediction, but test data is unlabeled hence only output the prediction result
 yhat = clf.predict(testFeaturesets)
+#By manually checking, line 42,50,53 mentioned coupon codes, and our prediction results are all 1! 
 print yhat
 np.savetxt("test_result.csv", yhat, delimiter="\n") 
