@@ -4,7 +4,7 @@ The objective of this task is to explore the structure of the deals.txt file.
 
 Building on task 1, we now want to start to understand the relationships to help us understand:
 
-Run Latent Dirichlet allocation (LDA) topic modelling on noun pharases, we have following results
+Run Latent Dirichlet allocation (LDA) topic modelling on noun pharases, we have following results:
 
 1. What groups exist within the deals?
 Once 2 is done, groups can be identified accordingly since topics have overlapping each other. There are travelling,
@@ -617,6 +617,7 @@ with open('../data/deals.txt','r') as fp:
         toks = nltk.regexp_tokenize(line, sentence_re)
         postoks = nltk.tag.pos_tag(toks)
         tree = chunker.parse(postoks)
+        # we only care about noun pharases
         terms = get_terms(tree)
 #        terms = [normalise(w) for w in toks if acceptable_word(w)] 
         for term in terms:
@@ -626,5 +627,6 @@ with open('../data/deals.txt','r') as fp:
 fp.closed
 voca = vocabulary.Vocabulary(nltk.corpus.stopwords.words('english'))
 docs = [voca.doc_to_ids(doc) for doc in corpus]
+# call LDA method
 ldaTest = lda.LDA(20, 0.5, 0.5, docs, voca.size())
 lda.lda_learning(ldaTest,50,voca)
