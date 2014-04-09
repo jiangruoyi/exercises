@@ -41,7 +41,8 @@ home	1102
 Answer: There are a lot of low frequency terms, many of which are product acronyms or short names.
 One meaningful term is CD-DVD-storage. 
 3. How many types of guitars are mentioned across all the deals?
-Answer: According to the extracted terms, guitar	appeared 88 times. Hence, 88 types.
+Answer: According to the extracted terms, guitar	appeared in 88 deals. Hence, 88 types assuming each deal discusses 
+a different guitar.
 """
 import nltk
 import csv
@@ -50,7 +51,7 @@ import re
 from nltk.corpus import stopwords
 
 def unique(seq):
-    """Keep only unique words in a deal string"""
+    """Keep only unique words in a deal"""
     seen = set()
     seen_add = seen.add
     return [ x for x in seq if x not in seen and not seen_add(x)]
@@ -85,7 +86,7 @@ def saveDict(fn,dict_rap):
         w.writerow([key, val])
     f.close()
 def get_terms(tree):
-    """Extracting terms from grammar tree"""
+    """Extracting noun pharases from grammar tree"""
     for leaf in leaves(tree):
         term = [normalise(w) for w,t in leaf if acceptable_word(w)]
         yield term
@@ -120,15 +121,18 @@ with open('../data/deals.txt','r') as fp:
         toks = nltk.regexp_tokenize(line, sentence_re)
         postoks = nltk.tag.pos_tag(toks)
         tree = chunker.parse(postoks)
+        # extract noun pharases
         terms = get_terms(tree)
         for term in terms:
             for word in term:
                 final_words.append(word);
+        #only keep unique terms for one deal        
         final_words = unique(final_words)
         #print final_words        
         for word in final_words:
             terms2freq = createOrUpdate(word,terms2freq)
 fp.closed
+#post processing: remove two frequent but less intersting terms
 if (terms2freq.has_key("com")):
     terms2freq.pop("com", None)
 if (terms2freq.has_key("free")):
@@ -143,4 +147,5 @@ if (terms2freq.has_key("free")):
 #        max_key=key
 #print "most popular term:"+ repr(max_key) + " , appear " + repr(max_value) + " times!"
 #print "least popular term:"+ repr(min_key) + " , appear " + repr(min_value) + " times!"
+# write to csv file    
 saveDict("termFreq.csv",terms2freq)
